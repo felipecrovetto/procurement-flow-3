@@ -61,13 +61,72 @@ function debounce(func, wait) {
 }
 
 function showLoading() {
-    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
-    modal.show();
+    try {
+        const loadingModalEl = document.getElementById('loadingModal');
+        if (loadingModalEl) {
+            // Cerrar cualquier modal existente primero
+            const existingModal = bootstrap.Modal.getInstance(loadingModalEl);
+            if (existingModal) {
+                existingModal.hide();
+            }
+            
+            // Crear y mostrar nuevo modal
+            const modal = new bootstrap.Modal(loadingModalEl, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            modal.show();
+            
+            // Timeout de seguridad para evitar que se quede cargando indefinidamente
+            setTimeout(() => {
+                hideLoading();
+            }, 30000); // 30 segundos máximo
+        }
+    } catch (error) {
+        console.error('Error showing loading modal:', error);
+    }
 }
 
 function hideLoading() {
-    const modal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
-    if (modal) modal.hide();
+    try {
+        const loadingModalEl = document.getElementById('loadingModal');
+        if (loadingModalEl) {
+            // Intentar obtener instancia existente
+            let modal = bootstrap.Modal.getInstance(loadingModalEl);
+            
+            if (modal) {
+                modal.hide();
+            } else {
+                // Si no hay instancia, crear una y ocultarla inmediatamente
+                modal = new bootstrap.Modal(loadingModalEl);
+                modal.hide();
+            }
+            
+            // Forzar ocultación después de un breve delay
+            setTimeout(() => {
+                loadingModalEl.classList.remove('show');
+                loadingModalEl.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                
+                // Remover backdrop si existe
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+            }, 100);
+        }
+    } catch (error) {
+        console.error('Error hiding loading modal:', error);
+        // Forzar ocultación en caso de error
+        const loadingModalEl = document.getElementById('loadingModal');
+        if (loadingModalEl) {
+            loadingModalEl.classList.remove('show');
+            loadingModalEl.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.remove();
+        }
+    }
 }
 
 function showAlert(message, type = 'info') {
